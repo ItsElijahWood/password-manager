@@ -6,6 +6,8 @@ Setup Variables ready for database CRUDS - DONE
 
 // S2 
 
-Setup Signup CRUD using stdin's
-Pass signup creds to database
+Setup Signup CRUD using stdin's - DONE
+Pass signup creds to database - DONE
+List users from database - DONE
 
+// S3
