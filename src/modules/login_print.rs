@@ -3,7 +3,6 @@ use std::io;
 use rusqlite::{Connection, Result};
 
 pub fn login_print(user: &str) {
-  let id = check_id(user).unwrap();
   let listener = io::stdin();
 
   let mut input = String::new();
@@ -14,13 +13,12 @@ pub fn login_print(user: &str) {
         List Passwords
   ");
 
-  println!("Input: ");
-
-  listener.read_line(&mut input).expect("Error reading line in login_print.rs");
-
-  let input = input.trim().to_lowercase();
-
   loop {
+    let id = check_id(user).unwrap();
+    println!("Input: ");
+
+    listener.read_line(&mut input).expect("Error reading line in login_print.rs");
+    let input = input.trim().to_lowercase();
     match input.as_str() {
       "create password" => {
         
@@ -29,14 +27,15 @@ pub fn login_print(user: &str) {
         let mut input = String::new();
         listener.read_line(&mut input).expect("Error reading line in login_print.rs");
 
-        if let Err(e) = create_password(id.to_string(), input.to_string()) {
+        if let Err(e) = create_password(id, input) {
           eprintln!("Error creating password: {}", e);
         } else {
           println!("Created password successfully.");
+          break;
         };
       }
       "list passwords" => {
-        let passwords = list_password(id.to_string()).unwrap();
+        let passwords = list_password(id).unwrap();
 
         for password in passwords {
           println!("{}", password);
@@ -48,25 +47,25 @@ pub fn login_print(user: &str) {
   }
 }
 
-fn check_id(user: &str) -> Result<usize> {
+fn check_id(user: &str) -> Result<u64> {
   let connection = Connection::open("passwords.db")?;
 
   let mut stmt = connection.prepare("SELECT id FROM users WHERE user = ?")?;
 
-  let id: usize = stmt.query_row([user], |row| row.get::<_, usize>(0))?;
+  let id: u64 = stmt.query_row([user], |row| row.get::<_, u64>(0))?;
 
   Ok(id)
 }
 
-fn create_password(id: String, password: String) -> Result<()> {
+fn create_password(id: u64, password: String) -> Result<()> {
   let connection = Connection::open("passwords.db")?;
 
-  connection.execute("INSERT INTO passwords (id, password) VALUES (?, ?)", [id, password])?;
+  connection.execute("INSERT INTO passwords (id, password) VALUES (?, ?)", (id, password.trim()))?;
 
   Ok(())
 }
 
-fn list_password(id: String) -> Result<Vec<String>> {
+fn list_password(id: u64) -> Result<Vec<String>> {
   let connection = Connection::open("passwords.db")?;
 
   let mut stmt = connection.prepare("SELECT password FROM passwords WHERE id = ?")?;
